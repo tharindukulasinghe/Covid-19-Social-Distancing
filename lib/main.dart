@@ -6,6 +6,9 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:rxdart/subjects.dart';
 
+import 'Settings.dart';
+import 'Register.dart';
+
 void main() => runApp(MyApp());
 
 class ReceivedNotification {
@@ -29,7 +32,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: MyHomePage(title: 'Social Distancing App'),
+        home: RegisterForm(),
       );
 }
 
@@ -38,6 +41,7 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
   final FlutterBlue flutterBlue = FlutterBlue.instance;
+
   final List<DeviceResult> devicesList = new List<DeviceResult>();
   final List<BluetoothDevice> devices = new List<BluetoothDevice>();
   bool isDialogOpen = false;
