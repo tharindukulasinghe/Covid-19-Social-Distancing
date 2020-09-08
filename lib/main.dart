@@ -6,6 +6,7 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:rxdart/subjects.dart';
 
+import 'Registration.dart';
 import 'Settings.dart';
 import 'Register.dart';
 
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: RegisterForm(),
+        home: RegistrationScreen(),
       );
 }
 
@@ -45,6 +46,7 @@ class MyHomePage extends StatefulWidget {
   final List<DeviceResult> devicesList = new List<DeviceResult>();
   final List<BluetoothDevice> devices = new List<BluetoothDevice>();
   bool isDialogOpen = false;
+
   final Map<Guid, List<int>> readValues = new Map<Guid, List<int>>();
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
