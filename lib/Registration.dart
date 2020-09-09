@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:ble/models/User.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -128,13 +131,36 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  save() {
+  save() async {
     if (_formKey.currentState.validate()) {
       // If the form is valid, display a snackbar. In the real world,
       // you'd often call a server or save the information in a database.
 
       _formKey.currentState.save();
-      print(user.address);
+
+      print(jsonEncode(user));
+      bool result = await createUser(user);
+      if (result) {
+        Navigator.pushNamed(context, '/settings');
+      }
+    }
+  }
+
+  Future<bool> createUser(User user) async {
+    final http.Response reponse = await http.post(
+      'http://10.0.2.2:3011/api/user/new',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(user),
+    );
+
+    if (reponse.statusCode == 200) {
+      Navigator.pushNamed(context, '/home');
+      return true;
+    } else {
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text('Error')));
+      return false;
     }
   }
 }

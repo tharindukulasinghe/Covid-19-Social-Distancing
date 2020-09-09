@@ -33,7 +33,14 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: RegistrationScreen(),
+        initialRoute: '/',
+        routes: {
+          // When navigating to the "/" route, build the FirstScreen widget.
+          '/': (context) => RegistrationScreen(),
+          // When navigating to the "/second" route, build the SecondScreen widget.
+          '/settings': (context) => Settings(),
+          '/home': (context) => MyHomePage(),
+        },
       );
 }
 
