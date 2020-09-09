@@ -3,6 +3,9 @@ class User {
   String address;
   String email;
   String bluetoothId;
+  String name;
+
+  User() {}
 
   Map<String, dynamic> toJson() {
     return {
@@ -12,4 +15,6 @@ class User {
       'bluetoothId': bluetoothId
     };
   }
+
+  User.fromJson(Map json) : name = json['name'];
 }

@@ -11,7 +11,7 @@ class RegistrationScreen extends StatefulWidget {
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
-  User user = User();
+  User user = new User();
 
   @override
   Widget build(BuildContext context) {

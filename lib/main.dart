@@ -4,11 +4,14 @@ import 'package:ble/DeviceResult.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:localstorage/localstorage.dart';
 import 'package:rxdart/subjects.dart';
 
+import 'DeviceList.dart';
 import 'Registration.dart';
 import 'Settings.dart';
 import 'Register.dart';
+import 'models/Device.dart';
 
 void main() => runApp(MyApp());
 
@@ -29,7 +32,7 @@ class ReceivedNotification {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'BLE Demo',
+        title: 'Social Distancing',
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
@@ -37,9 +40,9 @@ class MyApp extends StatelessWidget {
         routes: {
           // When navigating to the "/" route, build the FirstScreen widget.
           '/': (context) => RegistrationScreen(),
-          // When navigating to the "/second" route, build the SecondScreen widget.
           '/settings': (context) => Settings(),
           '/home': (context) => MyHomePage(),
+          '/report': (context) => MyListScreen(),
         },
       );
 }
@@ -56,20 +59,9 @@ class MyHomePage extends StatefulWidget {
 
   final Map<Guid, List<int>> readValues = new Map<Guid, List<int>>();
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  final LocalStorage storage = new LocalStorage('idlist');
 
-  var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-
-// Streams are created so that app can respond to notification-related events since the plugin is initialised in the `main` function
-  final BehaviorSubject<ReceivedNotification>
-      didReceiveLocalNotificationSubject =
-      BehaviorSubject<ReceivedNotification>();
-
-  final BehaviorSubject<String> selectNotificationSubject =
-      BehaviorSubject<String>();
-
-  NotificationAppLaunchDetails notificationAppLaunchDetails;
+  List<Device> idlist = new List<Device>();
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -80,24 +72,12 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothDevice _connectedDevice;
   List<BluetoothService> _services;
 
-  Future<void> _showNotification() async {
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'your channel id', 'your channel name', 'your channel description',
-        importance: Importance.Max, priority: Priority.High, ticker: 'ticker');
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-    var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-    await widget.flutterLocalNotificationsPlugin.show(
-        0, 'plain title', 'plain body', platformChannelSpecifics,
-        payload: 'item x');
-  }
-
   _addDeviceTolist(final DeviceResult device) {
     if (!widget.devices.contains(device.device)) {
       setState(() {
         widget.devicesList.add(device);
         widget.devices.add(device.device);
-        _showNotification();
+        //_showNotification();
       });
     } else {
       int index = widget.devices.indexOf(device.device);
@@ -131,6 +111,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+
+    widget.storage.setItem('idlist', widget.idlist);
+
     widget.flutterBlue.connectedDevices
         .asStream()
         .listen((List<BluetoothDevice> devices) {
@@ -138,11 +121,14 @@ class _MyHomePageState extends State<MyHomePage> {
       //   _addDeviceTolist(device);
       // }
     });
+
+    widget.flutterBlue.stopScan();
     widget.flutterBlue.startScan();
     widget.flutterBlue.scanResults.listen((List<ScanResult> results) {
       for (ScanResult result in results) {
         _addDeviceTolist(new DeviceResult(
             result.rssi, result.device, getDistance(result.rssi)));
+        widget.idlist.add(new Device(result.device.id.toString()));
       }
     });
     widget.flutterBlue.startScan();
@@ -165,28 +151,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     Text(device.distance.toStringAsFixed(2) + "m"),
                   ],
                 ),
-              ),
-              FlatButton(
-                color: Colors.blue,
-                child: Text(
-                  'Connect',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onPressed: () async {
-                  widget.flutterBlue.stopScan();
-                  try {
-                    await device.device.connect();
-                  } catch (e) {
-                    if (e.code != 'already_connected') {
-                      throw e;
-                    }
-                  } finally {
-                    _services = await device.device.discoverServices();
-                  }
-                  setState(() {
-                    _connectedDevice = device.device;
-                  });
-                },
               ),
             ],
           ),
@@ -392,7 +356,27 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Text("Social Distancing App"),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(
+                Icons.settings,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.receipt,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/report');
+              },
+            )
+          ],
         ),
         body: _buildView(),
       );
